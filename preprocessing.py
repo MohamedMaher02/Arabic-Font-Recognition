@@ -203,11 +203,3 @@ def preprocess_image(image_file, image_size=500):
         output = flip_image(output)
 
     return output
-
-
-directory = 'C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\fonts-dataset\\Scheherazade New'
-save_directory = 'C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\fonts-dataset\\Scheherazade New preprocessed'
-files = os.listdir(directory)
-for i in files:
-    image = preprocess_image(directory + '\\' + i)
-    plt.imsave(save_directory + '\\' + i, image, cmap='gray')
