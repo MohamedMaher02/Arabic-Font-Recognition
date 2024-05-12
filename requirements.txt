@@ -92,7 +92,7 @@ keyring==25.0.0
 kiwisolver==1.4.5
 lark==1.1.9
 lazy_loader==0.4
-libtorrent==2.0.10
+libtorrent
 lit==17.0.6.dev0
 lockfile==0.12.2
 lxml==5.1.0
