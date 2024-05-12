@@ -6,3 +6,4 @@ scikit-image
 joblib
 matplotlib
 opencv-python
+gunicorn
