@@ -77,7 +77,7 @@ def feature_extraction(img_path):
 
 
 Labels = {3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
-img_path = "C:\\Users\\Mohamad Ameen\\Pictures\\Screenshots\\Screenshot 2024-05-12 042550.png"
+img_path = "C:\\Users\\Mohamad Ameen\\Pictures\\Screenshots\\Screenshot 2024-05-12 043256.png"
 features = feature_extraction(img_path)
 
 
