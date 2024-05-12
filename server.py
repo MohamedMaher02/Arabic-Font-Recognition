@@ -17,8 +17,6 @@ import cv2 as cv
 app = Flask(__name__, template_folder='./')
 
 
-
-
 def detect_background_color(image):
     width, height = image.shape[:2]
     corners = [(0, 0), (0, height-1), (width-1, 0), (width-1, height-1)]
@@ -108,7 +106,8 @@ def detect_if_flipped(image):
     output = dilate(output, 1, 15, 2)
     output = errode(output, 1, 90, 4)
 
-    contours, hierarchy = cv.findContours(output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(
+        output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     # for countour in contours:
     #     x, y, w, h = cv.boundingRect(countour)
@@ -155,7 +154,8 @@ def detect_if_vertical(image):
     output = dilate(output, 15, 1, 1)
     output = errode(output, 15, 1, 2)
 
-    contours, hierarchy = cv.findContours(output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(
+        output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     if contours is None or len(contours) == 0:
         return False
     max_contour = max(contours, key=cv.contourArea)
@@ -181,7 +181,8 @@ def detect_if_rotated(image):
     plt.imshow(output, cmap='gray')
     plt.show()
 
-    contour, _ = cv.findContours(output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contour, _ = cv.findContours(
+        output, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     if len(contour) == 0:
         plt.imshow(image, cmap='gray')
         plt.show()
@@ -193,8 +194,8 @@ def detect_if_rotated(image):
     rect_area = w*h
 
 
-def preprocess_image(image, image_size=500):
-    output = image
+def preprocess_image(image0, image_size=500):
+    output = image0
     output = convert_to_binary(output)
     output = remove_implusive_noise(output, 5)
     output = resize_image(output, image_size, image_size)
@@ -215,6 +216,10 @@ def preprocess_image(image, image_size=500):
 
 
 
+
+
+
+
 def precompute_gabor_kernels(ksize, sigma, lambd, gamma, psi):
     gabor_kernels = {}
     for theta in [0 , np.pi / 8.0 , 3.0 * np.pi / 4.0]:
@@ -224,7 +229,7 @@ def precompute_gabor_kernels(ksize, sigma, lambd, gamma, psi):
     return gabor_kernels
 
 
-def feature_extraction(img):
+def feature_extraction(img_path):
     ksize = 31
     sigma = 1.5
     lambd = [0.01 ,0.1,0.5, 4, 8, 12]
@@ -235,7 +240,8 @@ def feature_extraction(img):
     gabor_kernels = precompute_gabor_kernels(ksize, sigma, lambd, gamma, psi)
 
     # Read and preprocess image
-    image = preprocess_image(img, image_size=256)
+    # image = cv.imread(img_path, cv.IMREAD_GRAYSCALE)
+    image = preprocess_image(img_path)
     
     
     feature_vecotr = []
@@ -282,38 +288,39 @@ def feature_extraction(img):
     
     return np.array(feature_vecotr)
 
+
 def predict_text_font(img_path):
-    # Extract features from the image
-    labels={3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
-    
+    Labels = {3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
     features = feature_extraction(img_path)
 
-    # Create a DataFrame from the features
-    num_features = len(features)
-    df = pd.DataFrame(features.reshape(1, num_features), columns=[
-                      f"Feature{i+1}" for i in range(num_features)])
 
-    # Load the scaler model
-    scaler = joblib.load('scaler_model.pkl')
+    num_features = len(features) # features is an np.array containing 62 elements
+    df = pd.DataFrame(features.reshape(1, num_features))
+
+    # Assign column names from 'Feature1' to 'FeatureN'
+    column_names = [f"Feature{i+1}" for i in range(num_features)]
+    df.columns = column_names
+
+    df.head()
+
+
+
+    scaler = joblib.load('./scaler_model.pkl')
     # Load the PCA model
-    pca = joblib.load('pca_model.pkl')
+    pca = joblib.load('./pca_model.pkl')
 
-    # Scale the features using the loaded StandardScaler
+    # Assuming you have your test data in a DataFrame called 'df_test'
+    # Scale the test data using the loaded StandardScaler
     X_test_scaled = scaler.transform(df)
-    # Apply PCA transformation to the scaled features
+
+    # Apply PCA transformation to the scaled test data
     X_test_pca = pca.transform(X_test_scaled)
 
-    # Load the trained classifier
-    clf = joblib.load('trained_model.pkl')
+    clf = joblib.load('./trained_model.pkl')
 
-    # Predict the label for the features
-    y_pred = clf.predict(X_test_pca)
+    y=clf.predict(X_test_pca)
 
-    # Map the predicted label to the corresponding text font
-    predicted_font = labels[y_pred[0]]
-
-    return predicted_font
-
+    return Labels[y[0]]
 
 @app.route('/')
 def home():

@@ -73,33 +73,36 @@ def feature_extraction(img_path):
     
     return np.array(feature_vecotr)
 
+
 def predict_text_font(img_path):
-    # Extract features from the image
-    labels={3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
+    Labels = {3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
     features = feature_extraction(img_path)
 
-    # Create a DataFrame from the features
-    num_features = len(features)
-    df = pd.DataFrame(features.reshape(1, num_features), columns=[
-                      f"Feature{i+1}" for i in range(num_features)])
 
-    # Load the scaler model
-    scaler = joblib.load('scaler_model.pkl')
+    num_features = len(features) # features is an np.array containing 62 elements
+    df = pd.DataFrame(features.reshape(1, num_features))
+
+    # Assign column names from 'Feature1' to 'FeatureN'
+    column_names = [f"Feature{i+1}" for i in range(num_features)]
+    df.columns = column_names
+
+    df.head()
+
+
+
+    scaler = joblib.load('C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\Arabic-Font-Recognition\\scaler_model.pkl')
     # Load the PCA model
-    pca = joblib.load('pca_model.pkl')
+    pca = joblib.load('C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\Arabic-Font-Recognition\\pca_model.pkl')
 
-    # Scale the features using the loaded StandardScaler
+    # Assuming you have your test data in a DataFrame called 'df_test'
+    # Scale the test data using the loaded StandardScaler
     X_test_scaled = scaler.transform(df)
-    # Apply PCA transformation to the scaled features
+
+    # Apply PCA transformation to the scaled test data
     X_test_pca = pca.transform(X_test_scaled)
 
-    # Load the trained classifier
-    clf = joblib.load('trained_model.pkl')
+    clf = joblib.load('C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\Arabic-Font-Recognition\\trained_model.pkl')
 
-    # Predict the label for the features
-    y_pred = clf.predict(X_test_pca)
+    y=clf.predict(X_test_pca)
 
-    # Map the predicted label to the corresponding text font
-    predicted_font = labels[y_pred[0]]
-
-    return predicted_font
+    return Labels[y[0]]
