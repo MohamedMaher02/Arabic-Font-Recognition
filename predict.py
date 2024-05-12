@@ -26,8 +26,7 @@ def feature_extraction(img_path):
     gabor_kernels = precompute_gabor_kernels(ksize, sigma, lambd, gamma, psi)
 
     # Read and preprocess image
-    image = cv.imread(img_path, cv.IMREAD_GRAYSCALE)
-
+    image = preprocess_image(img_path, image_size=256)
     
     
     feature_vecotr = []
@@ -74,37 +73,33 @@ def feature_extraction(img_path):
     
     return np.array(feature_vecotr)
 
+def predict_text_font(img_path):
+    # Extract features from the image
+    labels={3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
+    features = feature_extraction(img_path)
 
+    # Create a DataFrame from the features
+    num_features = len(features)
+    df = pd.DataFrame(features.reshape(1, num_features), columns=[
+                      f"Feature{i+1}" for i in range(num_features)])
 
-Labels = {3: 'IBM Plex Sans Arabic', 4: 'Lemonada', 5: 'Marhey', 11: 'Scheherazade New'}
-img_path = "C:\\Users\\Mohamad Ameen\\Pictures\\Screenshots\\Screenshot 2024-05-12 043256.png"
-features = feature_extraction(img_path)
+    # Load the scaler model
+    scaler = joblib.load('scaler_model.pkl')
+    # Load the PCA model
+    pca = joblib.load('pca_model.pkl')
 
+    # Scale the features using the loaded StandardScaler
+    X_test_scaled = scaler.transform(df)
+    # Apply PCA transformation to the scaled features
+    X_test_pca = pca.transform(X_test_scaled)
 
-num_features = len(features) # features is an np.array containing 62 elements
-df = pd.DataFrame(features.reshape(1, num_features))
+    # Load the trained classifier
+    clf = joblib.load('trained_model.pkl')
 
-# Assign column names from 'Feature1' to 'FeatureN'
-column_names = [f"Feature{i+1}" for i in range(num_features)]
-df.columns = column_names
+    # Predict the label for the features
+    y_pred = clf.predict(X_test_pca)
 
-df.head()
+    # Map the predicted label to the corresponding text font
+    predicted_font = labels[y_pred[0]]
 
-
-
-scaler = joblib.load('C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\Arabic-Font-Recognition\\scaler_model.pkl')
-# Load the PCA model
-pca = joblib.load('C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\Arabic-Font-Recognition\\pca_model.pkl')
-
-# Assuming you have your test data in a DataFrame called 'df_test'
-# Scale the test data using the loaded StandardScaler
-X_test_scaled = scaler.transform(df)
-
-# Apply PCA transformation to the scaled test data
-X_test_pca = pca.transform(X_test_scaled)
-
-clf = joblib.load('C:\\Users\\Mohamad Ameen\\Desktop\\NN-Project\\Arabic-Font-Recognition\\trained_model.pkl')
-
-y=clf.predict(X_test_pca)
-
-print(Labels[y[0]])
+    return predicted_font
