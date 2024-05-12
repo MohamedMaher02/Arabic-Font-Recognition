@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 import pandas as pd
 import numpy as np
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import joblib
 import cv2 as cv
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='./')
 
 
 
@@ -314,6 +314,10 @@ def predict_text_font(img_path):
 
     return predicted_font
 
+
+@app.route('/')
+def home():
+    return render_template('./index.html')
 
 
 @app.route('/predict', methods=['POST'])
